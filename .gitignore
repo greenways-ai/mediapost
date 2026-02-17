@@ -66,3 +66,11 @@ coverage/
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# Supabase
+.supabase/
+.supabase/temp/
+
+# Local env files that may contain secrets
+.env.local
+.env.*.local
