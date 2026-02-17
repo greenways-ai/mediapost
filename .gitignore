@@ -74,3 +74,12 @@ coverage/
 # Local env files that may contain secrets
 .env.local
 .env.*.local
+
+# GitHub Actions (local testing)
+.actrc
+.secrets
+
+# Deployment artifacts
+*.tar.gz
+*.zip
+dist-ssr/
