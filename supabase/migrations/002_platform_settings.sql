@@ -1,8 +1,12 @@
 -- Platform Settings table for admin management
 -- Stores OAuth credentials and platform enable/disable status
 
+-- Add is_admin column to profiles table FIRST (needed for policies below)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
+
+-- Create table for platform settings
 CREATE TABLE platform_settings (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   platform TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   is_enabled BOOLEAN DEFAULT false,
@@ -78,9 +82,6 @@ INSERT INTO platform_settings (platform, name, is_enabled) VALUES
   ('devto', 'Dev.to', false),
   ('twitch', 'Twitch', false),
   ('threads', 'Threads', false);
-
--- Add is_admin column to profiles table
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
 
 -- Create policy to allow admins to view all profiles
 CREATE POLICY "Admins can view all profiles"

@@ -1,5 +1,5 @@
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Use gen_random_uuid() which is native in PostgreSQL 13+
+-- No extension needed for UUID generation
 
 -- Profiles table (extends auth.users)
 CREATE TABLE profiles (
@@ -13,7 +13,7 @@ CREATE TABLE profiles (
 
 -- Social accounts table (connected platforms)
 CREATE TABLE accounts (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   platform TEXT NOT NULL,
   name TEXT NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE accounts (
 
 -- Posts table
 CREATE TABLE posts (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
   platforms TEXT[] NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE posts (
 
 -- Post analytics table
 CREATE TABLE post_analytics (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
   platform TEXT NOT NULL,
   impressions INTEGER DEFAULT 0,
