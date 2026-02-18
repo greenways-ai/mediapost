@@ -31,8 +31,44 @@ jobs:
     needs: verify
     
     steps:
-    - name: Checkout code
+    - name: Checkout code with submodules
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        ssh-key: ${{ secrets.DEPLOY_SSH_KEY }}
+    
+    - name: Setup SSH for submodule
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+      if: ${{ secrets.DEPLOY_SSH_KEY != '' }}
+      continue-on-error: true
+    
+    - name: Pull dot-secrets submodule (fallback)
+      run: |
+        git submodule update --init --recursive
+      continue-on-error: true
+      
+    - name: Load Supabase credentials from dot-secrets
+      run: |
+        if [ -f .secrets/mypost/prod/supabase.env ]; then
+          echo "Loading Supabase credentials from dot-secrets..."
+          while IFS='=' read -r key value; do
+            [[ "$key" =~ ^#.*$ ]] && continue
+            [[ -z "$key" ]] && continue
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            if [ -n "$value" ] && [[ ! "$value" =~ ^your- ]] && [[ ! "$value" =~ ^PASTE_ ]]; then
+              echo "$key=$value" >> $GITHUB_ENV
+              echo "Loaded: $key"
+            fi
+          done < .secrets/mypost/prod/supabase.env
+          echo "Supabase credentials loaded from dot-secrets"
+        else
+          echo "Warning: .secrets/mypost/prod/supabase.env not found"
+          exit 1
+        fi
+      shell: bash
       
     - name: Setup Supabase CLI
       uses: supabase/setup-cli@v1
@@ -40,19 +76,19 @@ jobs:
         version: latest
         
     - name: Link to Production Project
-      run: supabase link --project-ref ${{ secrets.PRODUCTION_SUPABASE_PROJECT_REF }}
+      run: supabase link --project-ref $PRODUCTION_SUPABASE_PROJECT_REF
       env:
-        SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        SUPABASE_ACCESS_TOKEN: ${{ env.SUPABASE_ACCESS_TOKEN }}
         
     - name: Push Database Migrations
       run: supabase db push
       env:
-        SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        SUPABASE_ACCESS_TOKEN: ${{ env.SUPABASE_ACCESS_TOKEN }}
         
     - name: Deploy Edge Functions
-      run: supabase functions deploy --project-ref ${{ secrets.PRODUCTION_SUPABASE_PROJECT_REF }}
+      run: supabase functions deploy --project-ref $PRODUCTION_SUPABASE_PROJECT_REF
       env:
-        SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        SUPABASE_ACCESS_TOKEN: ${{ env.SUPABASE_ACCESS_TOKEN }}
 
   deploy-frontend-production:
     name: Deploy Frontend to Production
@@ -79,29 +115,67 @@ jobs:
         git submodule update --init --recursive
       continue-on-error: true
       
-    - name: Load production environment from dot-secrets
+    - name: Load all environment from dot-secrets
       run: |
+        # Load main .env file
         if [ -f .secrets/mypost/prod/.env ]; then
           echo "Loading production environment from dot-secrets..."
           cp .secrets/mypost/prod/.env .env.local
-          echo "Environment file copied successfully"
-          # Export variables to GITHUB_ENV for subsequent steps
           while IFS='=' read -r key value; do
-            # Skip comments and empty lines
             [[ "$key" =~ ^#.*$ ]] && continue
             [[ -z "$key" ]] && continue
-            # Remove leading/trailing whitespace from key and value
             key=$(echo "$key" | xargs)
             value=$(echo "$value" | xargs)
-            # Only export if value is not empty (placeholder values should be replaced via secrets)
-            if [ -n "$value" ] && [[ ! "$value" =~ ^your- ]]; then
+            if [ -n "$value" ] && [[ ! "$value" =~ ^your- ]] && [[ ! "$value" =~ ^PASTE_ ]]; then
               echo "$key=$value" >> $GITHUB_ENV
             fi
           done < .secrets/mypost/prod/.env
-          echo "Production environment loaded from dot-secrets"
-        else
-          echo "Warning: .secrets/mypost/prod/.env not found, using GitHub Secrets fallback"
+          echo "✓ Loaded .env"
         fi
+        
+        # Load Supabase credentials
+        if [ -f .secrets/mypost/prod/supabase.env ]; then
+          while IFS='=' read -r key value; do
+            [[ "$key" =~ ^#.*$ ]] && continue
+            [[ -z "$key" ]] && continue
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            if [ -n "$value" ] && [[ ! "$value" =~ ^your- ]] && [[ ! "$value" =~ ^PASTE_ ]]; then
+              echo "$key=$value" >> $GITHUB_ENV
+            fi
+          done < .secrets/mypost/prod/supabase.env
+          echo "✓ Loaded supabase.env"
+        fi
+        
+        # Load Netlify credentials
+        if [ -f .secrets/mypost/prod/netlify.env ]; then
+          while IFS='=' read -r key value; do
+            [[ "$key" =~ ^#.*$ ]] && continue
+            [[ -z "$key" ]] && continue
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            if [ -n "$value" ] && [[ ! "$value" =~ ^your- ]] && [[ ! "$value" =~ ^PASTE_ ]]; then
+              echo "$key=$value" >> $GITHUB_ENV
+            fi
+          done < .secrets/mypost/prod/netlify.env
+          echo "✓ Loaded netlify.env"
+        fi
+        
+        # Load database credentials (if needed for build)
+        if [ -f .secrets/mypost/prod/database.env ]; then
+          while IFS='=' read -r key value; do
+            [[ "$key" =~ ^#.*$ ]] && continue
+            [[ -z "$key" ]] && continue
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            if [ -n "$value" ] && [[ ! "$value" =~ ^your- ]] && [[ ! "$value" =~ ^PASTE_ ]]; then
+              echo "$key=$value" >> $GITHUB_ENV
+            fi
+          done < .secrets/mypost/prod/database.env
+          echo "✓ Loaded database.env"
+        fi
+        
+        echo "All environments loaded from dot-secrets"
       shell: bash
       
     - name: Setup Node.js
@@ -117,14 +191,11 @@ jobs:
       run: npm install -g netlify-cli
       
     - name: Build and Deploy to Netlify
-      run: netlify deploy --prod --build --team=${{ secrets.NETLIFY_TEAM_ID }}
+      run: netlify deploy --prod --build --team=$NETLIFY_TEAM_ID
       env:
-        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        NETLIFY_TEAM_ID: ${{ secrets.NETLIFY_TEAM_ID }}
-        # Build environment variables
-        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.PRODUCTION_SUPABASE_URL }}
-        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.PRODUCTION_SUPABASE_ANON_KEY }}
+        NETLIFY_AUTH_TOKEN: ${{ env.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ env.NETLIFY_SITE_ID }}
+        NETLIFY_TEAM_ID: ${{ env.NETLIFY_TEAM_ID }}
 
   create-release:
     name: Create Release
