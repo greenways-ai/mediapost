@@ -12,8 +12,36 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
+    - name: Checkout code with submodules
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        ssh-key: ${{ secrets.DEPLOY_SSH_KEY }}
+      
+    - name: Setup SSH for submodule
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+      if: ${{ secrets.DEPLOY_SSH_KEY != '' }}
+      continue-on-error: true
+    
+    - name: Pull dot-secrets submodule (fallback)
+      run: |
+        git submodule update --init --recursive
+      continue-on-error: true
+      
+    - name: Load environment from dot-secrets
+      run: |
+        if [ -f .secrets/mypost/prod/.env ]; then
+          echo "Loading environment from dot-secrets..."
+          cp .secrets/mypost/prod/.env .env.local
+          echo "Environment file copied"
+        else
+          echo "Creating placeholder .env.local"
+          echo "NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321" > .env.local
+          echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=test-key" >> .env.local
+        fi
+      shell: bash
       
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -28,11 +56,8 @@ jobs:
       run: npm run lint
       continue-on-error: true
       
-    - name: Type check
+    - name: Build Next.js
       run: npm run build
-      env:
-        VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'http://localhost:54321' }}
-        VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test' }}
 
   test:
     name: Run Tests
@@ -55,9 +80,6 @@ jobs:
     - name: Run tests
       run: npm test
       continue-on-error: true
-      env:
-        VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'http://localhost:54321' }}
-        VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test' }}
 
   supabase-check:
     name: Supabase Checks
