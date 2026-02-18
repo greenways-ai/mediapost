@@ -42,13 +42,9 @@ Environment variables and secrets are managed through the `dot-secrets` GitHub r
 
 ## Required GitHub Secrets
 
-Only one secret is required in GitHub - all other credentials are loaded from the `dot-secrets` submodule:
+**No secrets required!** All credentials are loaded from the `dot-secrets` submodule using the built-in `GITHUB_TOKEN`.
 
-| Secret | Description | How to Get |
-|--------|-------------|------------|
-| `DEPLOY_SSH_KEY` | SSH private key for dot-secrets repo access | Generate with `ssh-keygen` |
-
-### All other secrets are in dot-secrets
+The workflow automatically loads all environment variables from `.secrets/mypost/prod/`:
 
 The workflow automatically loads all environment variables from `.secrets/mypost/prod/`:
 
