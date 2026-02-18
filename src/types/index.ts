@@ -42,8 +42,24 @@ export interface PlatformConfig {
   authType: 'oauth' | 'token' | 'password';
 }
 
+// Platform Settings (for admin management)
+export interface PlatformSetting {
+  id: string;
+  platform: Platform;
+  name: string;
+  is_enabled: boolean;
+  client_id?: string;
+  client_secret?: string;
+  redirect_uri?: string;
+  scope?: string;
+  auth_url?: string;
+  token_url?: string;
+  additional_config?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
 export const PLATFORM_CONFIG: Record<Platform, PlatformConfig> = {
-  // Original platforms
   twitter: {
     id: 'twitter',
     name: 'X (Twitter)',
@@ -90,7 +106,6 @@ export const PLATFORM_CONFIG: Record<Platform, PlatformConfig> = {
     supportsMedia: true,
     authType: 'oauth'
   },
-  // New platforms
   pinterest: {
     id: 'pinterest',
     name: 'Pinterest',

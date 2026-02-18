@@ -42,8 +42,44 @@ jobs:
     environment: staging
     
     steps:
-    - name: Checkout code
+    - name: Checkout code with submodules
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        ssh-key: ${{ secrets.DEPLOY_SSH_KEY }}
+    
+    - name: Setup SSH for submodule
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+      if: ${{ secrets.DEPLOY_SSH_KEY != '' }}
+      continue-on-error: true
+    
+    - name: Pull dot-secrets submodule (fallback)
+      run: |
+        git submodule update --init --recursive
+      continue-on-error: true
+      
+    - name: Load staging environment from dot-secrets
+      run: |
+        if [ -f .secrets/mypost/staging/.env ]; then
+          echo "Loading staging environment from dot-secrets..."
+          cp .secrets/mypost/staging/.env .env.local
+          # Export variables to GITHUB_ENV for subsequent steps
+          while IFS='=' read -r key value; do
+            [[ "$key" =~ ^#.*$ ]] && continue
+            [[ -z "$key" ]] && continue
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            if [ -n "$value" ] && [[ ! "$value" =~ ^your- ]]; then
+              echo "$key=$value" >> $GITHUB_ENV
+            fi
+          done < .secrets/mypost/staging/.env
+          echo "Staging environment loaded from dot-secrets"
+        else
+          echo "Warning: .secrets/mypost/staging/.env not found, using GitHub Secrets fallback"
+        fi
+      shell: bash
       
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -54,20 +90,24 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Build frontend
+    - name: Build Next.js static site
       run: npm run build
       env:
-        VITE_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-        VITE_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+        NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL || secrets.STAGING_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || secrets.STAGING_SUPABASE_ANON_KEY }}
         
-    - name: Deploy to Vercel (Staging)
-      uses: vercel/action-deploy@v1
-      if: ${{ secrets.VERCEL_TOKEN != '' }}
+    - name: Deploy to Netlify (Staging)
+      uses: nwtgck/actions-netlify@v3.0
       with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod'
+        publish-dir: './dist'
+        production-branch: develop
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        deploy-message: "Staging deploy from GitHub Actions - ${{ github.sha }}"
+        enable-pull-request-comment: true
+        enable-commit-comment: false
+      env:
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_STAGING_SITE_ID || secrets.NETLIFY_SITE_ID }}
       continue-on-error: true
 
   notify:

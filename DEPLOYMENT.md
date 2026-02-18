@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This document explains how to deploy the Buffer Clone application using GitHub Actions.
+This document explains how to deploy the Buffer Clone application using GitHub Actions with dot-secrets for environment management.
 
 ## Overview
 
@@ -12,9 +12,43 @@ The project uses GitHub Actions for continuous integration and deployment:
 4. **Database Migrations** - Manual workflow for running Supabase migrations
 5. **Release** - Creates GitHub releases with build artifacts
 
-## Required Secrets
+## Environment Management with dot-secrets
+
+Environment variables and secrets are managed through the `dot-secrets` GitHub repository, included as a submodule at `.secrets/`.
+
+### Directory Structure
+
+```
+.secrets/mypost/
+├── prod/               # Production environment
+├── staging/            # Staging environment
+└── local-sample/       # Local development templates
+```
+
+### Setting up dot-secrets Access
+
+1. **Generate SSH Key** for GitHub Actions:
+   ```bash
+   ssh-keygen -t ed25519 -C "github-actions@mypost" -f deploy_key
+   ```
+
+2. **Add Deploy Key** to dot-secrets repository:
+   - Go to `github.com/greenways-ai/dot-secrets/settings/keys`
+   - Add the **public key** (`deploy_key.pub`) with read access
+
+3. **Add Secret** to mypost repository:
+   - Go to Settings > Secrets and variables > Actions
+   - Create secret `DEPLOY_SSH_KEY` with the **private key** content
+
+## Required GitHub Secrets
 
 Configure these secrets in your GitHub repository (Settings > Secrets and variables > Actions):
+
+### Required for dot-secrets
+
+| Secret | Description | How to Get |
+|--------|-------------|------------|
+| `DEPLOY_SSH_KEY` | SSH private key for dot-secrets repo access | Generate with `ssh-keygen` |
 
 ### Supabase Secrets
 
@@ -22,22 +56,55 @@ Configure these secrets in your GitHub repository (Settings > Secrets and variab
 |--------|-------------|------------|
 | `SUPABASE_ACCESS_TOKEN` | Your personal Supabase access token | [Account Settings](https://supabase.com/dashboard/account/tokens) |
 | `STAGING_SUPABASE_PROJECT_REF` | Staging project reference | Project Settings > General |
-| `STAGING_SUPABASE_URL` | Staging project URL | Project Settings > API |
-| `STAGING_SUPABASE_ANON_KEY` | Staging anon/public key | Project Settings > API |
 | `PRODUCTION_SUPABASE_PROJECT_REF` | Production project reference | Project Settings > General |
-| `PRODUCTION_SUPABASE_URL` | Production project URL | Project Settings > API |
-| `PRODUCTION_SUPABASE_ANON_KEY` | Production anon/public key | Project Settings > API |
 
-### Deployment Platform Secrets (Optional)
+### Netlify Secrets
 
-For Vercel deployment:
-- `VERCEL_TOKEN` - Vercel API token
-- `VERCEL_ORG_ID` - Vercel organization ID
-- `VERCEL_PROJECT_ID` - Vercel project ID
+| Secret | Description | How to Get |
+|--------|-------------|------------|
+| `NETLIFY_AUTH_TOKEN` | Netlify personal access token | [Applications](https://app.netlify.com/user/applications/personal) |
+| `NETLIFY_SITE_ID` | Production site ID | Site Settings > General |
+| `NETLIFY_STAGING_SITE_ID` | Staging site ID (optional) | Site Settings > General |
 
-For Netlify deployment:
-- `NETLIFY_AUTH_TOKEN` - Netlify personal access token
-- `NETLIFY_SITE_ID` - Netlify site ID
+### Alternative: Individual Secrets
+
+If you prefer not to use dot-secrets, you can set individual secrets:
+
+| Secret | Description |
+|--------|-------------|
+| `PRODUCTION_SUPABASE_URL` | Production Supabase URL |
+| `PRODUCTION_SUPABASE_ANON_KEY` | Production Supabase anon key |
+| `STAGING_SUPABASE_URL` | Staging Supabase URL |
+| `STAGING_SUPABASE_ANON_KEY` | Staging Supabase anon key |
+
+## Updating dot-secrets
+
+To update environment variables in dot-secrets:
+
+1. Navigate to the submodule:
+   ```bash
+   cd .secrets
+   ```
+
+2. Edit the appropriate environment file:
+   ```bash
+   vim mypost/prod/.env
+   ```
+
+3. Commit and push:
+   ```bash
+   git add .
+   git commit -m "Update production env vars"
+   git push
+   ```
+
+4. Update the submodule reference in main repo:
+   ```bash
+   cd ..
+   git add .secrets
+   git commit -m "Update dot-secrets submodule"
+   git push
+   ```
 
 ## Workflows
 
@@ -58,8 +125,12 @@ Runs automatically when pushing to `develop` branch.
 
 **Jobs:**
 1. **Deploy Supabase** - Pushes database migrations and deploys Edge Functions
-2. **Deploy Frontend** - Builds and deploys to staging environment
+2. **Deploy Frontend** - Builds and deploys to Netlify staging environment
 3. **Notify** - Reports deployment status
+
+**Environment Loading:**
+- Attempts to load from `.secrets/mypost/staging/.env`
+- Falls back to GitHub Secrets if dot-secrets unavailable
 
 ### Production Deployment (`deploy-production.yml`)
 
@@ -71,9 +142,13 @@ Can be triggered by:
 **Jobs:**
 1. **Verify** - Validates deployment conditions
 2. **Deploy Supabase** - Production database migrations
-3. **Deploy Frontend** - Production build and deploy
+3. **Deploy Frontend** - Production build and Netlify deploy
 4. **Create Release** - Creates GitHub release (for tags)
 5. **Notify** - Reports deployment status
+
+**Environment Loading:**
+- Attempts to load from `.secrets/mypost/prod/.env`
+- Falls back to GitHub Secrets if dot-secrets unavailable
 
 ### Database Migrations (`migrate.yml`)
 
@@ -170,6 +245,13 @@ For urgent production fixes:
 
 ## Troubleshooting
 
+### dot-secrets Not Found
+
+If the workflow can't access dot-secrets:
+1. Verify `DEPLOY_SSH_KEY` is set in GitHub Secrets
+2. Check that the deploy key has read access to dot-secrets repo
+3. Ensure the submodule is properly initialized: `git submodule update --init`
+
 ### Deployment Fails
 
 Check:
@@ -187,7 +269,7 @@ Check:
 
 ### Frontend Build Fails
 
-1. Check environment variables
+1. Check environment variables (dot-secrets or GitHub Secrets)
 2. Run `npm ci` and `npm run build` locally
 3. Check for TypeScript errors
 4. Verify all dependencies are installed
@@ -212,7 +294,7 @@ Currently, Supabase doesn't support automatic down migrations. To rollback:
 
 ### Frontend Rollback
 
-For Vercel/Netlify:
+For Netlify:
 1. Go to deployment dashboard
 2. Find previous working deployment
 3. Click "Promote to production"
@@ -235,7 +317,9 @@ act workflow_dispatch -W .github/workflows/migrate.yml
 ## Security Considerations
 
 - Never commit secrets to the repository
-- Use GitHub Secrets for all sensitive data
+- Use dot-secrets submodule or GitHub Secrets for all sensitive data
 - Protect production environment with required reviewers
 - Rotate Supabase access tokens regularly
 - Use separate Supabase projects for staging and production
+- Limit SSH deploy key access to read-only
+- Rotate SSH keys periodically

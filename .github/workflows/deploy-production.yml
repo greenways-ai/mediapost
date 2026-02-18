@@ -16,7 +16,7 @@ jobs:
   verify:
     name: Verify Deployment
     runs-on: ubuntu-latest
-    if: github.event.inputs.confirm == 'deploy' || github.ref_type == 'tag'
+    if: github.event.inputs.confirm == 'deploy' || github.ref_type == 'tag' || github.event_name == 'push'
     
     steps:
     - name: Verify branch/tag
@@ -61,8 +61,48 @@ jobs:
     environment: production
     
     steps:
-    - name: Checkout code
+    - name: Checkout code with submodules
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        ssh-key: ${{ secrets.DEPLOY_SSH_KEY }}
+    
+    - name: Setup SSH for submodule
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+      if: ${{ secrets.DEPLOY_SSH_KEY != '' }}
+      continue-on-error: true
+    
+    - name: Pull dot-secrets submodule (fallback)
+      run: |
+        git submodule update --init --recursive
+      continue-on-error: true
+      
+    - name: Load production environment from dot-secrets
+      run: |
+        if [ -f .secrets/mypost/prod/.env ]; then
+          echo "Loading production environment from dot-secrets..."
+          cp .secrets/mypost/prod/.env .env.local
+          echo "Environment file copied successfully"
+          # Export variables to GITHUB_ENV for subsequent steps
+          while IFS='=' read -r key value; do
+            # Skip comments and empty lines
+            [[ "$key" =~ ^#.*$ ]] && continue
+            [[ -z "$key" ]] && continue
+            # Remove leading/trailing whitespace from key and value
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            # Only export if value is not empty (placeholder values should be replaced via secrets)
+            if [ -n "$value" ] && [[ ! "$value" =~ ^your- ]]; then
+              echo "$key=$value" >> $GITHUB_ENV
+            fi
+          done < .secrets/mypost/prod/.env
+          echo "Production environment loaded from dot-secrets"
+        else
+          echo "Warning: .secrets/mypost/prod/.env not found, using GitHub Secrets fallback"
+        fi
+      shell: bash
       
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -73,37 +113,73 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Build frontend
+    - name: Build Next.js static site
       run: npm run build
       env:
-        VITE_SUPABASE_URL: ${{ secrets.PRODUCTION_SUPABASE_URL }}
-        VITE_SUPABASE_ANON_KEY: ${{ secrets.PRODUCTION_SUPABASE_ANON_KEY }}
+        # Use dot-secrets values if available, fallback to GitHub Secrets
+        NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL || secrets.PRODUCTION_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || secrets.PRODUCTION_SUPABASE_ANON_KEY }}
+        # Social platform credentials (loaded from dot-secrets if available)
+        TWITTER_CLIENT_ID: ${{ env.TWITTER_CLIENT_ID || secrets.TWITTER_CLIENT_ID }}
+        TWITTER_CLIENT_SECRET: ${{ env.TWITTER_CLIENT_SECRET || secrets.TWITTER_CLIENT_SECRET }}
+        REDDIT_CLIENT_ID: ${{ env.REDDIT_CLIENT_ID || secrets.REDDIT_CLIENT_ID }}
+        REDDIT_CLIENT_SECRET: ${{ env.REDDIT_CLIENT_SECRET || secrets.REDDIT_CLIENT_SECRET }}
+        INSTAGRAM_APP_ID: ${{ env.INSTAGRAM_APP_ID || secrets.INSTAGRAM_APP_ID }}
+        INSTAGRAM_APP_SECRET: ${{ env.INSTAGRAM_APP_SECRET || secrets.INSTAGRAM_APP_SECRET }}
+        PINTEREST_APP_ID: ${{ env.PINTEREST_APP_ID || secrets.PINTEREST_APP_ID }}
+        PINTEREST_APP_SECRET: ${{ env.PINTEREST_APP_SECRET || secrets.PINTEREST_APP_SECRET }}
+        DISCORD_CLIENT_ID: ${{ env.DISCORD_CLIENT_ID || secrets.DISCORD_CLIENT_ID }}
+        DISCORD_CLIENT_SECRET: ${{ env.DISCORD_CLIENT_SECRET || secrets.DISCORD_CLIENT_SECRET }}
+        YOUTUBE_CLIENT_ID: ${{ env.YOUTUBE_CLIENT_ID || secrets.YOUTUBE_CLIENT_ID }}
+        YOUTUBE_CLIENT_SECRET: ${{ env.YOUTUBE_CLIENT_SECRET || secrets.YOUTUBE_CLIENT_SECRET }}
+        TIKTOK_CLIENT_KEY: ${{ env.TIKTOK_CLIENT_KEY || secrets.TIKTOK_CLIENT_KEY }}
+        TIKTOK_CLIENT_SECRET: ${{ env.TIKTOK_CLIENT_SECRET || secrets.TIKTOK_CLIENT_SECRET }}
+        LINKEDIN_CLIENT_ID: ${{ env.LINKEDIN_CLIENT_ID || secrets.LINKEDIN_CLIENT_ID }}
+        LINKEDIN_CLIENT_SECRET: ${{ env.LINKEDIN_CLIENT_SECRET || secrets.LINKEDIN_CLIENT_SECRET }}
+        TUMBLR_CONSUMER_KEY: ${{ env.TUMBLR_CONSUMER_KEY || secrets.TUMBLR_CONSUMER_KEY }}
+        TUMBLR_CONSUMER_SECRET: ${{ env.TUMBLR_CONSUMER_SECRET || secrets.TUMBLR_CONSUMER_SECRET }}
+        GITHUB_CLIENT_ID: ${{ env.GITHUB_CLIENT_ID || secrets.GH_CLIENT_ID }}
+        GITHUB_CLIENT_SECRET: ${{ env.GITHUB_CLIENT_SECRET || secrets.GH_CLIENT_SECRET }}
+        TWITCH_CLIENT_ID: ${{ env.TWITCH_CLIENT_ID || secrets.TWITCH_CLIENT_ID }}
+        TWITCH_CLIENT_SECRET: ${{ env.TWITCH_CLIENT_SECRET || secrets.TWITCH_CLIENT_SECRET }}
+        THREADS_APP_ID: ${{ env.THREADS_APP_ID || secrets.THREADS_APP_ID }}
+        THREADS_APP_SECRET: ${{ env.THREADS_APP_SECRET || secrets.THREADS_APP_SECRET }}
+        TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+        BLUESKY_APP_PASSWORD: ${{ env.BLUESKY_APP_PASSWORD || secrets.BLUESKY_APP_PASSWORD }}
+        MASTODON_ACCESS_TOKEN: ${{ env.MASTODON_ACCESS_TOKEN || secrets.MASTODON_ACCESS_TOKEN }}
+        MEDIUM_INTEGRATION_TOKEN: ${{ env.MEDIUM_INTEGRATION_TOKEN || secrets.MEDIUM_INTEGRATION_TOKEN }}
+        DEVTO_API_KEY: ${{ env.DEVTO_API_KEY || secrets.DEVTO_API_KEY }}
         
-    - name: Deploy to Vercel (Production)
-      uses: vercel/action-deploy@v1
-      if: ${{ secrets.VERCEL_TOKEN != '' }}
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vergel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod'
-      continue-on-error: true
+    - name: Load Netlify credentials from dot-secrets
+      run: |
+        # Load Netlify credentials from dot-secrets if available
+        if [ -f .secrets/mypost/prod/netlify.env ]; then
+          while IFS='=' read -r key value; do
+            [[ "$key" =~ ^#.*$ ]] && continue
+            [[ -z "$key" ]] && continue
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            if [ -n "$value" ] && [[ ! "$value" =~ ^your- ]]; then
+              echo "$key=$value" >> $GITHUB_ENV
+            fi
+          done < .secrets/mypost/prod/netlify.env
+          echo "Netlify credentials loaded from dot-secrets"
+        fi
+      shell: bash
       
     - name: Deploy to Netlify
       uses: nwtgck/actions-netlify@v3.0
-      if: ${{ secrets.NETLIFY_AUTH_TOKEN != '' }}
       with:
         publish-dir: './dist'
         production-branch: main
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        deploy-message: "Deploy from GitHub Actions"
+        deploy-message: "Deploy from GitHub Actions - ${{ github.sha }}"
         enable-pull-request-comment: false
         enable-commit-comment: false
         overwrites-pull-request-comment: false
       env:
-        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-      continue-on-error: true
+        NETLIFY_AUTH_TOKEN: ${{ env.NETLIFY_AUTH_TOKEN || secrets.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ env.NETLIFY_SITE_ID || secrets.NETLIFY_SITE_ID }}
 
   create-release:
     name: Create Release

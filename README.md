@@ -1,243 +1,167 @@
-# Buffer Clone
+# MyPost
 
-A self-hosted social media scheduling application powered by Supabase. Compose, schedule, and post content to 18+ social platforms.
-
-![Buffer Clone Screenshot](https://via.placeholder.com/800x400/3778ff/ffffff?text=Buffer+Clone)
+A social media management platform built with Next.js and Supabase. Schedule and publish posts to multiple social media platforms from a single dashboard.
 
 ## Features
 
-- ✍️ **Compose Posts** - Write content with a clean, distraction-free editor
-- 🔗 **18+ Platform Support** - Twitter/X, Instagram, Reddit, Pinterest, Discord, Telegram, Bluesky, Mastodon, YouTube, TikTok, LinkedIn, Medium, Tumblr, GitHub, Dev.to, Twitch, Threads, and more
-- 📊 **Character Limits** - Automatic character counting per platform
-- 📅 **Scheduling** - Schedule posts for future dates and times
-- 🖼️ **Media Uploads** - Attach images and videos with Supabase Storage
-- 🔐 **Supabase Auth** - Email/password and OAuth authentication
-- 📋 **Post Queue** - Manage drafts, scheduled, and published posts
-- ☁️ **Supabase Backend** - PostgreSQL database, Edge Functions, and real-time subscriptions
-- 📱 **Responsive Design** - Works on desktop and mobile devices
-- 🚀 **CI/CD Ready** - GitHub Actions workflows for automated deployment
+- **Multi-Platform Publishing**: Post to Twitter, LinkedIn, Facebook, Instagram, Reddit, and 13+ other platforms
+- **Smart Scheduling**: Schedule posts for optimal engagement times
+- **Admin Dashboard**: Manage platform credentials, enable/disable platforms, and manage users
+- **Secure Authentication**: OAuth2 and token-based authentication with Supabase Auth
+- **Analytics**: Track post performance across platforms
+
+## Tech Stack
+
+- **Frontend**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL, Auth, Storage, Edge Functions)
+- **Deployment**: Netlify (static export)
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started)
+- Node.js 20+
+- Supabase CLI
+- Git
 
-### Installation
+### 1. Clone and Setup
 
 ```bash
-# Install Supabase CLI
-npm install -g supabase
+git clone <repo-url>
+cd mypost
+```
 
-# Login to Supabase
-supabase login
+### 2. Install Dependencies
 
-# Install dependencies
+```bash
 npm install
+```
 
-# Start local Supabase
+### 3. Setup Environment Variables
+
+Copy the local environment file from dot-secrets:
+
+```bash
+cp .secrets/mypost/local-sample/.env .env.local
+```
+
+Or create `.env.local` manually:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### 4. Start Supabase Locally
+
+```bash
 supabase start
+```
 
-# Copy environment file
-cp .env.example .env
-# Edit .env with credentials from `supabase start` output
+### 5. Apply Database Migrations
 
-# Start the development server
+```bash
+supabase db reset
+```
+
+### 6. Run the Development Server
+
+```bash
 npm run dev
 ```
 
-This will start:
-- **Frontend**: http://localhost:5173
-- **Supabase Studio**: http://localhost:54323
-- **Supabase API**: http://localhost:54321
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Documentation
+## Admin Setup
 
-| Document | Description |
-|----------|-------------|
-| [ENV_QUICKSTART.md](ENV_QUICKSTART.md) | ⚡ Quick environment setup (5 min) |
-| [ENV_SETUP_CHECKLIST.md](ENV_SETUP_CHECKLIST.md) | ✅ Complete setup checklist |
-| [SUPABASE_SETUP.md](SUPABASE_SETUP.md) | 🗄️ Supabase configuration guide |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | 🚀 Deployment and CI/CD guide |
+1. Sign up for an account at `/login`
+2. Make yourself admin in Supabase SQL Editor:
+   ```sql
+   UPDATE profiles SET is_admin = true WHERE id = 'your-user-id';
+   ```
+3. Access admin panel at `/admin`
+4. Configure platforms at `/admin/platforms` - enable/disable platforms and enter OAuth credentials
 
-## Supported Platforms
-
-### Social Networks
-- **Twitter/X** - Microblogging
-- **Instagram** - Visual storytelling
-- **Facebook** - Social networking
-- **LinkedIn** - Professional networking
-- **Reddit** - Forum discussions
-- **Pinterest** - Visual discovery
-- **TikTok** - Short videos
-- **YouTube** - Video platform
-- **Threads** - Meta's microblogging
-
-### Developer Platforms
-- **GitHub** - Code repositories
-- **Dev.to** - Developer blogging
-- **Medium** - Publishing platform
-
-### Messaging/Community
-- **Discord** - Community chat
-- **Telegram** - Messaging
-
-### Decentralized/Federated
-- **Bluesky** - Decentralized social
-- **Mastodon** - Federated social
-
-### Other
-- **Twitch** - Live streaming
-- **Tumblr** - Microblogging
-
-## Architecture
-
-### Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | React + TypeScript + Tailwind CSS |
-| Backend | Supabase (PostgreSQL + Auth + Storage) |
-| Database | PostgreSQL with Row Level Security |
-| Auth | Supabase Auth (Email + OAuth) |
-| Storage | Supabase Storage |
-| Edge Functions | Deno/TypeScript |
-| CI/CD | GitHub Actions |
-
-### Database Schema
+## Project Structure
 
 ```
-auth.users (Supabase Auth)
-  └── profiles (user profiles)
-  └── accounts (connected platforms)
-  └── posts (scheduled/published content)
-  └── post_analytics (metrics)
-```
-
-### Project Structure
-
-```
-├── src/                      # Frontend source
-│   ├── components/           # React components
-│   ├── lib/                  # Supabase client
-│   └── types/                # TypeScript types
+├── src/
+│   ├── app/              # Next.js App Router
+│   │   ├── admin/        # Admin dashboard
+│   │   ├── dashboard/    # User dashboard
+│   │   ├── login/        # Authentication
+│   │   └── api/          # API routes
+│   ├── lib/              # Utilities
+│   │   ├── supabase.ts   # Supabase clients
+│   │   └── database.types.ts
+│   └── types/            # TypeScript types
 ├── supabase/
-│   ├── migrations/           # Database migrations
-│   └── functions/            # Edge Functions
-├── .github/workflows/        # CI/CD workflows
-└── .env                      # Environment variables
+│   ├── migrations/       # Database migrations
+│   └── config.toml
+└── .secrets/             # Git submodule with env configs
+    └── mypost/
+        ├── prod/         # Production configs
+        ├── staging/      # Staging configs
+        └── local-sample/ # Local dev templates
 ```
-
-## Environment Setup
-
-### Option 1: Quick Start (Recommended)
-
-See [ENV_QUICKSTART.md](ENV_QUICKSTART.md) for a 15-minute setup.
-
-### Option 2: Complete Checklist
-
-See [ENV_SETUP_CHECKLIST.md](ENV_SETUP_CHECKLIST.md) for detailed step-by-step configuration.
 
 ## Deployment
 
-### Staging
+### Production (Netlify)
 
-Push to `develop` branch for automatic staging deployment:
+1. Push to `main` branch
+2. GitHub Actions automatically:
+   - Pulls dot-secrets submodule
+   - Builds Next.js static site
+   - Deploys to Netlify
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed setup.
+
+### Environment Configuration
+
+Production environment variables are stored in the `dot-secrets` submodule:
 
 ```bash
-git checkout -b develop
-git push origin develop
+# Update prod config
+cd .secrets
+vim mypost/prod/.env
+git add . && git commit -m "Update prod config"
+git push
+
+# Update main repo reference
+cd ..
+git add .secrets
+git commit -m "Update dot-secrets submodule"
 ```
 
-### Production
+## Database Migrations
 
-Push to `main` branch for production deployment:
+Create a new migration:
 
 ```bash
-git checkout main
-git merge develop
-git push origin main
+supabase migration new migration_name
 ```
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+Apply migrations locally:
 
-## CI/CD Workflows
+```bash
+supabase db reset
+```
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `ci.yml` | PR/Push | Lint, build, test |
-| `deploy-staging.yml` | Push to `develop` | Deploy to staging |
-| `deploy-production.yml` | Push to `main` | Deploy to production |
-| `migrate.yml` | Manual | Database migrations |
-| `release.yml` | Tag push | Create releases |
+Push to production:
 
-## Authentication
-
-### Email/Password
-- Standard email and password signup/signin
-- Email confirmation (configurable)
-
-### OAuth Providers
-Supabase Auth supports:
-- Twitter
-- GitHub
-- Google
-- Discord
-
-Configure in Supabase Dashboard > Authentication > Providers
-
-## API Credentials
-
-To post to social platforms, you need API credentials for each service. See [ENV_SETUP_CHECKLIST.md](ENV_SETUP_CHECKLIST.md) for links to each platform's developer portal.
-
-## Customization
-
-### Adding a New Platform
-
-1. Add platform config to `src/types/index.ts`
-2. Add icon to `src/components/PlatformIcon.tsx`
-3. Create service in `supabase/functions/publish-post/`
-4. Update database (if needed)
-
-### Custom Styling
-
-Edit `tailwind.config.js` and component files in `src/components/`.
-
-## Troubleshooting
-
-### Common Issues
-
-**Supabase connection fails**
-- Ensure `supabase start` is running
-- Check `.env` values match `supabase status` output
-
-**OAuth callback fails**
-- Verify callback URL matches exactly in provider dashboard
-- Check for trailing slashes
-
-**Build fails**
-- Run `npm ci` to clean install dependencies
-- Check TypeScript errors with `npm run build`
+```bash
+supabase db push
+```
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. Create a feature branch from `develop`
+2. Make your changes
+3. Submit a PR to `develop`
+4. After merge, staging auto-deploys
+5. Create PR from `develop` to `main` for production
 
 ## License
 
 MIT
-
-## Credits
-
-- Inspired by [Buffer](https://buffer.com)
-- Built with [Supabase](https://supabase.com)
-- Icons from various platform brand assets
-
----
-
-**Ready to start?** Check out [ENV_QUICKSTART.md](ENV_QUICKSTART.md) for the 15-minute setup guide!
