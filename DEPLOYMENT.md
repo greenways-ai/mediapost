@@ -42,40 +42,24 @@ Environment variables and secrets are managed through the `dot-secrets` GitHub r
 
 ## Required GitHub Secrets
 
-Configure these secrets in your GitHub repository (Settings > Secrets and variables > Actions):
-
-### Required for dot-secrets
+Only one secret is required in GitHub - all other credentials are loaded from the `dot-secrets` submodule:
 
 | Secret | Description | How to Get |
 |--------|-------------|------------|
 | `DEPLOY_SSH_KEY` | SSH private key for dot-secrets repo access | Generate with `ssh-keygen` |
 
-### Supabase Secrets
+### All other secrets are in dot-secrets
 
-| Secret | Description | How to Get |
-|--------|-------------|------------|
-| `SUPABASE_ACCESS_TOKEN` | Your personal Supabase access token | [Account Settings](https://supabase.com/dashboard/account/tokens) |
-| `STAGING_SUPABASE_PROJECT_REF` | Staging project reference | Project Settings > General |
-| `PRODUCTION_SUPABASE_PROJECT_REF` | Production project reference | Project Settings > General |
+The workflow automatically loads all environment variables from `.secrets/mypost/prod/`:
 
-### Netlify Secrets
+| File | Contents |
+|------|----------|
+| `.env` | Application environment (NEXT_PUBLIC_SUPABASE_URL, etc.) |
+| `supabase.env` | Supabase credentials (SUPABASE_ACCESS_TOKEN, project refs) |
+| `netlify.env` | Netlify tokens (NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID, NETLIFY_TEAM_ID) |
+| `database.env` | PostgreSQL connection strings |
 
-| Secret | Description | How to Get |
-|--------|-------------|------------|
-| `NETLIFY_AUTH_TOKEN` | Netlify personal access token | [Applications](https://app.netlify.com/user/applications/personal) |
-| `NETLIFY_SITE_ID` | Production site ID | Site Settings > General |
-| `NETLIFY_STAGING_SITE_ID` | Staging site ID (optional) | Site Settings > General |
-
-### Alternative: Individual Secrets
-
-If you prefer not to use dot-secrets, you can set individual secrets:
-
-| Secret | Description |
-|--------|-------------|
-| `PRODUCTION_SUPABASE_URL` | Production Supabase URL |
-| `PRODUCTION_SUPABASE_ANON_KEY` | Production Supabase anon key |
-| `STAGING_SUPABASE_URL` | Staging Supabase URL |
-| `STAGING_SUPABASE_ANON_KEY` | Staging Supabase anon key |
+**No need to configure any other GitHub Secrets!**
 
 ## Updating dot-secrets
 
