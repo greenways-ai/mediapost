@@ -31,14 +31,16 @@ jobs:
     needs: verify
     
     steps:
+    - name: Configure git for private submodules
+      run: |
+        git config --global url."https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      
     - name: Checkout code with submodules
       uses: actions/checkout@v4
       with:
         submodules: recursive
-        token: ${{ secrets.GH_TOKEN }}
       
     - name: Load Supabase credentials from dot-secrets
-      id: load-secrets
       run: |
         if [ -f .secrets/mypost/prod/supabase.env ]; then
           echo "Loading Supabase credentials from dot-secrets..."
@@ -49,8 +51,7 @@ jobs:
             value=$(echo "$value" | xargs)
             if [ -n "$value" ] && [[ ! "$value" =~ ^your- ]] && [[ ! "$value" =~ ^PASTE_ ]]; then
               echo "$key=$value" >> $GITHUB_ENV
-              # Also output for use in this job
-              echo "$key=$value" >> $GITHUB_OUTPUT
+              echo "Loaded: $key"
             fi
           done < .secrets/mypost/prod/supabase.env
           echo "Supabase credentials loaded"
@@ -87,11 +88,14 @@ jobs:
     environment: production
     
     steps:
+    - name: Configure git for private submodules
+      run: |
+        git config --global url."https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      
     - name: Checkout code with submodules
       uses: actions/checkout@v4
       with:
         submodules: recursive
-        token: ${{ secrets.GH_TOKEN }}
       
     - name: Load all environment from dot-secrets
       run: |
