@@ -117,10 +117,11 @@ jobs:
       run: npm install -g netlify-cli
       
     - name: Build and Deploy to Netlify
-      run: netlify deploy --prod --build
+      run: netlify deploy --prod --build --team=${{ secrets.NETLIFY_TEAM_ID }}
       env:
         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        NETLIFY_TEAM_ID: ${{ secrets.NETLIFY_TEAM_ID }}
         # Build environment variables
         NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.PRODUCTION_SUPABASE_URL }}
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.PRODUCTION_SUPABASE_ANON_KEY }}
