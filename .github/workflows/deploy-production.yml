@@ -31,14 +31,11 @@ jobs:
     needs: verify
     
     steps:
-    - name: Configure git for private submodules
-      run: |
-        git config --global url."https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      
     - name: Checkout code with submodules
       uses: actions/checkout@v4
       with:
         submodules: recursive
+        token: ${{ secrets.GH_TOKEN }}
       
     - name: Load Supabase credentials from dot-secrets
       run: |
@@ -88,14 +85,11 @@ jobs:
     environment: production
     
     steps:
-    - name: Configure git for private submodules
-      run: |
-        git config --global url."https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      
     - name: Checkout code with submodules
       uses: actions/checkout@v4
       with:
         submodules: recursive
+        token: ${{ secrets.GH_TOKEN }}
       
     - name: Load all environment from dot-secrets
       run: |
