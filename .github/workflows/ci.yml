@@ -12,11 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Configure git for private submodules
+      run: |
+        git config --global url."https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      
     - name: Checkout code with submodules
       uses: actions/checkout@v4
       with:
         submodules: recursive
-        token: ${{ secrets.GITHUB_TOKEN }}
       
     - name: Load environment from dot-secrets
       run: |
