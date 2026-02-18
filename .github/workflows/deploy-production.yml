@@ -38,6 +38,7 @@ jobs:
         token: ${{ secrets.GH_TOKEN }}
       
     - name: Load Supabase credentials from dot-secrets
+      id: load-secrets
       run: |
         if [ -f .secrets/mypost/prod/supabase.env ]; then
           echo "Loading Supabase credentials from dot-secrets..."
@@ -48,12 +49,13 @@ jobs:
             value=$(echo "$value" | xargs)
             if [ -n "$value" ] && [[ ! "$value" =~ ^your- ]] && [[ ! "$value" =~ ^PASTE_ ]]; then
               echo "$key=$value" >> $GITHUB_ENV
-              echo "Loaded: $key"
+              # Also output for use in this job
+              echo "$key=$value" >> $GITHUB_OUTPUT
             fi
           done < .secrets/mypost/prod/supabase.env
-          echo "Supabase credentials loaded from dot-secrets"
+          echo "Supabase credentials loaded"
         else
-          echo "Warning: .secrets/mypost/prod/supabase.env not found"
+          echo "Error: .secrets/mypost/prod/supabase.env not found"
           exit 1
         fi
       shell: bash
@@ -64,7 +66,7 @@ jobs:
         version: latest
         
     - name: Link to Production Project
-      run: supabase link --project-ref $PRODUCTION_SUPABASE_PROJECT_REF
+      run: supabase link --project-ref ${{ env.PRODUCTION_SUPABASE_PROJECT_REF }}
       env:
         SUPABASE_ACCESS_TOKEN: ${{ env.SUPABASE_ACCESS_TOKEN }}
         
@@ -74,7 +76,7 @@ jobs:
         SUPABASE_ACCESS_TOKEN: ${{ env.SUPABASE_ACCESS_TOKEN }}
         
     - name: Deploy Edge Functions
-      run: supabase functions deploy --project-ref $PRODUCTION_SUPABASE_PROJECT_REF
+      run: supabase functions deploy --project-ref ${{ env.PRODUCTION_SUPABASE_PROJECT_REF }}
       env:
         SUPABASE_ACCESS_TOKEN: ${{ env.SUPABASE_ACCESS_TOKEN }}
 
@@ -167,11 +169,10 @@ jobs:
       run: npm install -g netlify-cli
       
     - name: Build and Deploy to Netlify
-      run: netlify deploy --prod --build --team=$NETLIFY_TEAM_ID
+      run: netlify deploy --prod --build --team=${{ env.NETLIFY_TEAM_ID }}
       env:
         NETLIFY_AUTH_TOKEN: ${{ env.NETLIFY_AUTH_TOKEN }}
         NETLIFY_SITE_ID: ${{ env.NETLIFY_SITE_ID }}
-        NETLIFY_TEAM_ID: ${{ env.NETLIFY_TEAM_ID }}
 
   create-release:
     name: Create Release
