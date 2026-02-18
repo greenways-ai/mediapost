@@ -58,7 +58,7 @@ export default function Login() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
           <Logo />
           <ThemeToggle />
         </div>
@@ -69,7 +69,7 @@ export default function Login() {
         <div className="max-w-md w-full">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-display font-bold text-text-primary">
-              {isSignUp ? 'Create your account' : 'Sign in to your account'}
+              {isSignUp ? 'Create your account' : 'Welcome back'}
             </h2>
             <p className="mt-2 text-text-secondary">
               {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}

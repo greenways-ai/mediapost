@@ -1,6 +1,6 @@
-# Statstrade Design System
+# MyPost Design System
 
-A bold, gaming/analytics-inspired design system featuring neon green accents, deep dark mode, and clean light mode variants.
+A modern social media management platform with a bold, dark-mode-first aesthetic inspired by high-end SaaS products.
 
 ## 🎨 Color Palette
 
@@ -24,14 +24,14 @@ A bold, gaming/analytics-inspired design system featuring neon green accents, de
 ### Alert Colors (Vibrant Red)
 | Token | Light Mode | Dark Mode | Usage |
 |-------|------------|-----------|-------|
-| `--alert` | `#ff2d55` | `#ff4757` | Errors, warnings, danger |
+| `--alert` | `#ff2d55` | `#ff4757` | Errors, warnings |
 | `--alert-light` | `#ff4757` | `#ff6b7a` | Glows |
 | `--alert-dark` | `#e6294b` | `#ff2d55` | Hover states |
 
 ### Info & Warning
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--info` | `#00d4ff` | Information, links |
+| `--info` | `#00d4ff` | Information, secondary accent |
 | `--warning` | `#ff9500` | Warnings, pending states |
 
 ### Text Colors
@@ -140,12 +140,6 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 <span className="glow-text">Glowing Text</span>
 ```
 
-### Text Outline
-```tsx
-// Creates outline text effect like "EVERY" in the design
-<span className="text-outline">OUTLINE</span>
-```
-
 ### Text Gradients
 ```tsx
 <span className="text-gradient">Gradient Text</span>
@@ -154,7 +148,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 ### Live Indicator
 ```tsx
-<span className="badge-alert pulse-live">Live Terminal</span>
+<span className="badge-accent pulse-live">Live</span>
 ```
 
 ### Progress Bar
@@ -174,72 +168,56 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 | `radius-xl` | 24px | Large cards, modals |
 | `radius-full` | 9999px | Pills, avatars |
 
-## 🎭 Design Motifs from Image
-
-### 1. "YOUR CONTENT IS THE MARKET"
-- Bold, italic display typography
-- Green accent on key words
-- Dark background with subtle grid pattern
-
-### 2. "ONE MARKET / EVERY PLATFORM"
-- Outline text effect for emphasis
-- Central hub design with connecting elements
-- Platform icons in a circular arrangement
-
-### 3. Stats & Analytics Cards
-- Large numeric values with Space Grotesk font
-- Small uppercase labels
-- Green/red color coding for positive/negative
-
-### 4. Engagement Charts
-- Bar charts with gradient fills
-- "Surge Detected" badges
-- Time-series indicators
-
-### 5. Live Terminal Feel
-- Monospace font for technical details
-- "Live" pulse indicators
-- Version badges
-
 ## 🚀 Usage Examples
 
-### Hero Section
+### Hero Section (Buffer-style)
 ```tsx
 <section className="relative px-6 py-20">
-  <div className="absolute inset-0 grid-pattern opacity-50" />
-  <h1 className="font-display text-5xl font-bold">
-    YOUR <span className="text-accent">CONTENT</span>
-    <br />
-    <span className="italic">IS THE </span>
-    <span className="text-accent italic">MARKET</span>
-  </h1>
+  <div className="absolute inset-0 grid-pattern opacity-30" />
+  
+  <div className="max-w-[1400px] mx-auto">
+    <div className="inline-flex items-center gap-2 badge-accent mb-6">
+      <Zap className="w-3.5 h-3.5" />
+      <span>Now with AI-powered scheduling</span>
+    </div>
+
+    <h1 className="font-display text-5xl font-bold text-text-primary">
+      Manage all your <span className="text-accent">social media</span>
+    </h1>
+    
+    <p className="text-text-secondary text-lg max-w-lg mt-6">
+      Schedule posts, track analytics, and engage with your audience 
+      across Instagram, Twitter, LinkedIn, and more.
+    </p>
+  </div>
 </section>
 ```
 
-### Stat Card with Trend
+### Dashboard Stat Card
 ```tsx
-<div className="stat-card">
-  <div className="flex items-center justify-between mb-2">
-    <span className="stat-label">Engagement Delta</span>
-    <span className="badge-accent">+24%</span>
+<div className="card p-5">
+  <div className="flex items-center justify-between mb-3">
+    <div className="p-2 rounded-lg bg-accent/10">
+      <TrendingUp className="w-5 h-5 text-accent" />
+    </div>
+    <span className="stat-delta-positive text-sm">+24%</span>
   </div>
-  <div className="stat-value text-accent">+248%</div>
-  <div className="mt-4 progress-bar">
-    <div className="progress-bar-fill" style={{ width: '84%' }} />
-  </div>
+  <div className="stat-value text-2xl">8.5%</div>
+  <div className="stat-label mt-1">Engagement Rate</div>
 </div>
 ```
 
-### Alert Card
+### Platform Connection Card
 ```tsx
-<div className="bg-alert rounded-2xl p-6 text-white shadow-glow-red">
-  <div className="font-display text-2xl font-bold">TOP 1% OF CREATORS</div>
-  <p className="text-sm opacity-80 mt-2">
-    Your audience is more active than 99% of users.
-  </p>
-  <button className="w-full mt-4 py-3 bg-white text-alert font-bold rounded-lg">
-    CLAIM YOUR DASHBOARD
-  </button>
+<div className="card p-4 flex items-center gap-3 hover:border-accent/50 transition-colors">
+  <div className="w-10 h-10 rounded-lg bg-[#E4405F]/10 flex items-center justify-center">
+    <Instagram className="w-5 h-5" style={{ color: '#E4405F' }} />
+  </div>
+  <div className="flex-1">
+    <div className="font-medium text-text-primary">Instagram</div>
+    <div className="text-xs text-text-tertiary">@yourbrand</div>
+  </div>
+  <div className="w-2 h-2 rounded-full bg-accent" />
 </div>
 ```
 
@@ -250,19 +228,35 @@ src/
 ├── app/
 │   ├── globals.css       # Theme variables & component classes
 │   ├── layout.tsx        # Root layout with ThemeProvider
-│   └── page.tsx          # Landing page
+│   ├── page.tsx          # Landing page (Buffer-style)
+│   ├── login/
+│   │   └── page.tsx      # Auth page
+│   └── dashboard/
+│       └── page.tsx      # Dashboard
 ├── components/
 │   ├── ThemeProvider.tsx # Theme context provider
 │   ├── ThemeToggle.tsx   # Theme toggle button
-│   └── Logo.tsx          # Logo component
+│   └── Logo.tsx          # MP Logo component
 ├── tailwind.config.ts    # Extended Tailwind config
 ```
 
 ## 🎯 Key Design Principles
 
-1. **High Contrast**: Strong contrast between background and text
-2. **Neon Accents**: Vibrant green (#00e676 in dark) for CTAs and highlights
-3. **Bold Typography**: Space Grotesk for headlines, tight letter-spacing
-4. **Glassmorphism**: Subtle transparency with backdrop blur
-5. **Data-First**: Stats and numbers are prominent
-6. **Gaming Aesthetic**: Terminal vibes, live indicators, version badges
+1. **Buffer-inspired Layout**: Clean, feature-focused sections with clear CTAs
+2. **High Contrast**: Strong contrast between background and text
+3. **Neon Accents**: Vibrant green for CTAs and positive metrics
+4. **Bold Typography**: Space Grotesk for headlines
+5. **Card-based UI**: Elevated cards with subtle shadows
+6. **Platform Colors**: Use official brand colors for social platform icons
+7. **Data Visualization**: Charts and stats prominently displayed
+
+## 🔌 Platform Brand Colors
+
+| Platform | Color |
+|----------|-------|
+| Instagram | `#E4405F` |
+| Twitter/X | `#1DA1F2` |
+| LinkedIn | `#0A66C2` |
+| Facebook | `#1877F2` |
+| YouTube | `#FF0000` |
+| TikTok | `#00f2ea` / `#ff0050` |

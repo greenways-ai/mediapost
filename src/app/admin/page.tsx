@@ -6,7 +6,8 @@ import {
   Activity,
   TrendingUp,
   AlertCircle,
-  Zap
+  Zap,
+  Calendar
 } from 'lucide-react';
 
 async function getStats() {
@@ -69,8 +70,8 @@ export default async function AdminDashboard() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-display font-bold text-text-primary">Dashboard</h1>
-        <p className="text-text-secondary mt-1">Overview of your Statstrade instance</p>
+        <h1 className="text-2xl font-display font-bold text-text-primary">Admin Dashboard</h1>
+        <p className="text-text-secondary mt-1">Overview of your MyPost instance</p>
       </div>
 
       {/* Stats Grid */}

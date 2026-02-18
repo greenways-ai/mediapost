@@ -13,7 +13,8 @@ import {
   ExternalLink,
   Key,
   Eye,
-  EyeOff
+  EyeOff,
+  Loader2
 } from 'lucide-react';
 
 const supabase = createClientBrowser();
@@ -100,7 +101,7 @@ export default function PlatformsAdmin() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -108,15 +109,15 @@ export default function PlatformsAdmin() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Platform Management</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-2xl font-display font-bold text-text-primary">Platform Management</h1>
+        <p className="text-text-secondary mt-1">
           Enable/disable social media platforms and configure their OAuth credentials
         </p>
       </div>
 
       {message && (
         <div className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
-          message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          message.type === 'success' ? 'bg-accent/10 text-accent border border-accent/20' : 'bg-alert/10 text-alert border border-alert/20'
         }`}>
           {message.type === 'success' ? (
             <CheckCircle className="w-5 h-5" />
@@ -135,24 +136,24 @@ export default function PlatformsAdmin() {
           return (
             <div
               key={platform.id}
-              className={`bg-white rounded-xl border ${
-                platform.is_enabled ? 'border-blue-200' : 'border-gray-200'
-              } shadow-sm overflow-hidden`}
+              className={`card overflow-hidden ${
+                platform.is_enabled ? 'border-accent/30' : ''
+              }`}
             >
               {/* Platform Header */}
               <div className="p-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg"
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg"
                     style={{ backgroundColor: config?.color || '#666' }}
                   >
                     {config?.name.charAt(0) || '?'}
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-text-primary">
                       {config?.name || platform.name}
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-text-secondary">
                       {config?.authType === 'oauth' ? 'OAuth 2.0' : 
                        config?.authType === 'token' ? 'API Token' : 'Password'}
                     </p>
@@ -162,7 +163,7 @@ export default function PlatformsAdmin() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setEditing(isEditing ? null : platform.id)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="btn-secondary text-sm"
                   >
                     <Settings className="w-4 h-4" />
                     {isEditing ? 'Close' : 'Configure'}
@@ -174,9 +175,9 @@ export default function PlatformsAdmin() {
                     className="flex items-center gap-2"
                   >
                     {platform.is_enabled ? (
-                      <ToggleRight className="w-12 h-12 text-green-500" />
+                      <ToggleRight className="w-12 h-12 text-accent" />
                     ) : (
-                      <ToggleLeft className="w-12 h-12 text-gray-400" />
+                      <ToggleLeft className="w-12 h-12 text-text-tertiary" />
                     )}
                   </button>
                 </div>
@@ -184,7 +185,7 @@ export default function PlatformsAdmin() {
 
               {/* Configuration Form */}
               {isEditing && (
-                <div className="border-t border-gray-200 bg-gray-50 p-6">
+                <div className="border-t border-divider bg-surface-sunken/50 p-6">
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -194,7 +195,7 @@ export default function PlatformsAdmin() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Client ID */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-text-secondary mb-2">
                           <Key className="w-4 h-4 inline mr-1" />
                           Client ID
                         </label>
@@ -203,13 +204,13 @@ export default function PlatformsAdmin() {
                           name="client_id"
                           defaultValue={platform.client_id || ''}
                           placeholder="Enter client ID"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary focus:ring-2 focus:ring-accent/50 focus:border-accent"
                         />
                       </div>
 
                       {/* Client Secret */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-text-secondary mb-2">
                           <Key className="w-4 h-4 inline mr-1" />
                           Client Secret
                         </label>
@@ -219,12 +220,12 @@ export default function PlatformsAdmin() {
                             name="client_secret"
                             defaultValue={platform.client_secret || ''}
                             placeholder="Enter client secret"
-                            className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 pr-10 bg-surface border border-border rounded-lg text-text-primary focus:ring-2 focus:ring-accent/50 focus:border-accent"
                           />
                           <button
                             type="button"
                             onClick={() => toggleSecretVisibility(`${platform.id}_secret`)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
                           >
                             {showSecrets[`${platform.id}_secret`] ? (
                               <EyeOff className="w-4 h-4" />
@@ -237,7 +238,7 @@ export default function PlatformsAdmin() {
 
                       {/* Redirect URI */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-text-secondary mb-2">
                           <ExternalLink className="w-4 h-4 inline mr-1" />
                           Redirect URI
                         </label>
@@ -246,13 +247,13 @@ export default function PlatformsAdmin() {
                           name="redirect_uri"
                           defaultValue={platform.redirect_uri || `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback/${platform.platform}`}
                           placeholder="https://yourdomain.com/auth/callback/twitter"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary focus:ring-2 focus:ring-accent/50 focus:border-accent"
                         />
                       </div>
 
                       {/* Scope */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-text-secondary mb-2">
                           Scope
                         </label>
                         <input
@@ -260,13 +261,13 @@ export default function PlatformsAdmin() {
                           name="scope"
                           defaultValue={platform.scope || ''}
                           placeholder="e.g., tweet.read tweet.write users.read"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary focus:ring-2 focus:ring-accent/50 focus:border-accent"
                         />
                       </div>
 
                       {/* Auth URL */}
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-text-secondary mb-2">
                           Authorization URL
                         </label>
                         <input
@@ -274,13 +275,13 @@ export default function PlatformsAdmin() {
                           name="auth_url"
                           defaultValue={platform.auth_url || ''}
                           placeholder="https://api.twitter.com/2/oauth2/authorize"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary focus:ring-2 focus:ring-accent/50 focus:border-accent"
                         />
                       </div>
 
                       {/* Token URL */}
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-text-secondary mb-2">
                           Token URL
                         </label>
                         <input
@@ -288,7 +289,7 @@ export default function PlatformsAdmin() {
                           name="token_url"
                           defaultValue={platform.token_url || ''}
                           placeholder="https://api.twitter.com/2/oauth2/token"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary focus:ring-2 focus:ring-accent/50 focus:border-accent"
                         />
                       </div>
                     </div>
@@ -297,11 +298,11 @@ export default function PlatformsAdmin() {
                       <button
                         type="submit"
                         disabled={saving === platform.id}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                        className="btn-primary disabled:opacity-50"
                       >
                         {saving === platform.id ? (
                           <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <Loader2 className="w-4 h-4 animate-spin" />
                             Saving...
                           </>
                         ) : (
@@ -313,7 +314,7 @@ export default function PlatformsAdmin() {
                       </button>
 
                       {platform.is_enabled && (
-                        <span className="flex items-center gap-1 text-sm text-green-600">
+                        <span className="flex items-center gap-1 text-sm text-accent">
                           <CheckCircle className="w-4 h-4" />
                           Platform is enabled
                         </span>

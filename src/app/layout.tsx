@@ -3,8 +3,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "Statstrade - Turn Content Into The Market",
-  description: "Predict the unpredictable. Turn every post into a play-to-earn experience for your audience.",
+  title: "MyPost - Social Media Management Platform",
+  description: "Schedule, publish, and analyze your social media content across all platforms in one place.",
 };
 
 export default function RootLayout({

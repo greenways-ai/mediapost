@@ -10,8 +10,8 @@ import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 export const metadata = {
-  title: 'Admin - Statstrade',
-  description: 'Admin dashboard for Statstrade',
+  title: 'Admin - MyPost',
+  description: 'Admin dashboard for MyPost',
 };
 
 const navItems = [
