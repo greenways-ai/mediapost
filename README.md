@@ -72,6 +72,35 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Development with Production Supabase
+
+To test against the live production database (use with caution):
+
+```bash
+# Switch to production Supabase
+./scripts/switch-env.sh prod
+
+# Or manually copy the production env
+cp .secrets/mypost/prod/.env .env.local
+
+# Start dev server
+npm run dev
+```
+
+**⚠️ Warning**: This connects to LIVE production data. Changes you make will affect the production database.
+
+To switch back to local Supabase:
+
+```bash
+./scripts/switch-env.sh local
+```
+
+Check current environment:
+
+```bash
+./scripts/switch-env.sh status
+```
+
 ## Admin Setup
 
 1. Sign up for an account at `/login`
