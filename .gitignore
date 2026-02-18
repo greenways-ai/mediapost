@@ -84,3 +84,5 @@ coverage/
 *.zip
 dist-ssr/
 .next/
+.netlify/
+deno.lock
