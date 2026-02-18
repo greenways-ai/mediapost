@@ -5,7 +5,7 @@ import type { Database } from './database.types'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
 
-// Client-side Supabase client (for components)
+// Client-side Supabase client (for components) - uses cookies for PKCE
 export const createClientBrowser = () =>
   createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,13 +28,20 @@ export const signInWithEmail = (email: string, password: string) =>
 export const signUpWithEmail = (email: string, password: string) =>
   supabase.auth.signUp({ email, password })
 
-export const signInWithOAuth = (provider: 'twitter' | 'github' | 'google' | 'discord') =>
-  supabase.auth.signInWithOAuth({
+// OAuth with PKCE - uses the browser client to properly store code verifier in cookies
+export const signInWithOAuth = async (provider: 'twitter' | 'github' | 'google' | 'discord') => {
+  // Use browser client for OAuth to ensure PKCE code verifier is stored in cookies
+  const browserClient = createClientBrowser()
+  
+  return browserClient.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '/auth/callback'
+      redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '/auth/callback',
+      // PKCE is enabled by default in @supabase/ssr, but we can be explicit
+      skipBrowserRedirect: false,
     }
   })
+}
 
 export const signOut = () => supabase.auth.signOut()
 

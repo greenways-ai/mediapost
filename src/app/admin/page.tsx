@@ -5,7 +5,9 @@ import {
   FileText, 
   Activity,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  Zap,
+  Calendar
 } from 'lucide-react';
 
 async function getStats() {
@@ -37,39 +39,39 @@ export default async function AdminDashboard() {
   const statCards = [
     { 
       title: 'Total Users', 
-      value: stats.userCount, 
+      value: stats.userCount.toLocaleString(), 
       icon: Users, 
-      color: 'blue',
-      trend: '+12%'
+      trend: '+12%',
+      color: 'accent'
     },
     { 
       title: 'Total Posts', 
-      value: stats.postCount, 
+      value: stats.postCount.toLocaleString(), 
       icon: FileText, 
-      color: 'green',
-      trend: '+8%'
+      trend: '+8%',
+      color: 'info'
     },
     { 
       title: 'Connected Accounts', 
-      value: stats.accountCount, 
+      value: stats.accountCount.toLocaleString(), 
       icon: Share2, 
-      color: 'purple',
-      trend: '+5%'
+      trend: '+5%',
+      color: 'warning'
     },
     { 
       title: 'Active Platforms', 
       value: `${stats.enabledPlatforms}/18`, 
       icon: Activity, 
-      color: 'orange',
-      trend: 'Enabled'
+      trend: 'Enabled',
+      color: 'alert'
     },
   ];
 
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Overview of your MyPost instance</p>
+        <h1 className="text-2xl font-display font-bold text-text-primary">Admin Dashboard</h1>
+        <p className="text-text-secondary mt-1">Overview of your MyPost instance</p>
       </div>
 
       {/* Stats Grid */}
@@ -77,21 +79,21 @@ export default async function AdminDashboard() {
         {statCards.map((stat) => (
           <div
             key={stat.title}
-            className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"
+            className="card p-6 hover:border-accent/30 transition-colors"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                <p className="text-sm font-medium text-text-secondary">{stat.title}</p>
+                <p className="text-3xl font-display font-bold text-text-primary mt-2">{stat.value}</p>
               </div>
-              <div className={`p-3 rounded-lg bg-${stat.color}-50`}>
-                <stat.icon className={`w-6 h-6 text-${stat.color}-600`} />
+              <div className={`p-3 rounded-lg bg-${stat.color}/10`}>
+                <stat.icon className={`w-6 h-6 text-${stat.color}`} style={{ color: `var(--${stat.color})` }} />
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-green-600 font-medium">{stat.trend}</span>
-              <span className="text-gray-500 ml-2">from last month</span>
+              <TrendingUp className="w-4 h-4 text-accent mr-1" />
+              <span className="text-accent font-medium">{stat.trend}</span>
+              <span className="text-text-tertiary ml-2">from last month</span>
             </div>
           </div>
         ))}
@@ -99,60 +101,60 @@ export default async function AdminDashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <div className="card p-6">
+          <h2 className="text-lg font-display font-semibold text-text-primary mb-4">Quick Actions</h2>
           <div className="space-y-3">
             <a
               href="/admin/platforms"
-              className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-colors group"
+              className="flex items-center gap-4 p-4 rounded-lg border border-border hover:border-accent hover:bg-accent/5 transition-colors group"
             >
-              <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200">
-                <Share2 className="w-5 h-5 text-blue-600" />
+              <div className="p-2 bg-accent/10 rounded-lg group-hover:bg-accent/20">
+                <Share2 className="w-5 h-5 text-accent" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900">Manage Platforms</h3>
-                <p className="text-sm text-gray-500">Enable/disable platforms and configure OAuth</p>
+                <h3 className="font-medium text-text-primary">Manage Platforms</h3>
+                <p className="text-sm text-text-secondary">Enable/disable platforms and configure OAuth</p>
               </div>
             </a>
             <a
               href="/admin/users"
-              className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-purple-500 hover:bg-purple-50 transition-colors group"
+              className="flex items-center gap-4 p-4 rounded-lg border border-border hover:border-info hover:bg-info/5 transition-colors group"
             >
-              <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200">
-                <Users className="w-5 h-5 text-purple-600" />
+              <div className="p-2 bg-info/10 rounded-lg group-hover:bg-info/20">
+                <Users className="w-5 h-5 text-info" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900">View Users</h3>
-                <p className="text-sm text-gray-500">Manage users and their permissions</p>
+                <h3 className="font-medium text-text-primary">View Users</h3>
+                <p className="text-sm text-text-secondary">Manage users and their permissions</p>
               </div>
             </a>
           </div>
         </div>
 
         {/* System Status */}
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">System Status</h2>
+        <div className="card p-6">
+          <h2 className="text-lg font-display font-semibold text-text-primary mb-4">System Status</h2>
           <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
+            <div className="flex items-center justify-between py-3 border-b border-divider">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-gray-700">Supabase Connection</span>
+                <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                <span className="text-text-secondary">Supabase Connection</span>
               </div>
-              <span className="text-sm font-medium text-green-600">Connected</span>
+              <span className="text-sm font-medium text-accent">Connected</span>
             </div>
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
+            <div className="flex items-center justify-between py-3 border-b border-divider">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-gray-700">Authentication</span>
+                <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                <span className="text-text-secondary">Authentication</span>
               </div>
-              <span className="text-sm font-medium text-green-600">Active</span>
+              <span className="text-sm font-medium text-accent">Active</span>
             </div>
             <div className="flex items-center justify-between py-3">
               <div className="flex items-center gap-3">
-                <AlertCircle className="w-4 h-4 text-orange-500" />
-                <span className="text-gray-700">Platforms Configured</span>
+                <Zap className="w-4 h-4 text-warning" />
+                <span className="text-text-secondary">Platforms Configured</span>
               </div>
-              <span className="text-sm font-medium text-orange-600">
+              <span className="text-sm font-medium text-warning">
                 {stats.enabledPlatforms} enabled
               </span>
             </div>
