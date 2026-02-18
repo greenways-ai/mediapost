@@ -6,10 +6,12 @@ import {
   Share2,
   LogOut
 } from 'lucide-react';
+import { Logo } from '@/components/Logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export const metadata = {
-  title: 'Admin - MyPost',
-  description: 'Admin dashboard for MyPost',
+  title: 'Admin - Statstrade',
+  description: 'Admin dashboard for Statstrade',
 };
 
 const navItems = [
@@ -25,15 +27,13 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200">
-        <div className="p-6">
-          <Link href="/" className="flex items-center gap-2 text-xl font-bold text-gray-900">
-            <span className="text-blue-600">My</span>Post
-            <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded">
-              Admin
-            </span>
+      <aside className="fixed left-0 top-0 h-full w-64 bg-surface border-r border-border z-40">
+        <div className="p-6 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <Logo size="sm" />
+            <span className="badge-accent text-xs">Admin</span>
           </Link>
         </div>
         
@@ -43,7 +43,7 @@ export default function AdminLayout({
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-secondary rounded-lg hover:bg-surface-hover hover:text-text-primary transition-colors"
                 >
                   <item.icon className="w-5 h-5" />
                   {item.label}
@@ -53,10 +53,14 @@ export default function AdminLayout({
           </ul>
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs text-text-tertiary uppercase tracking-wider">Theme</span>
+            <ThemeToggle />
+          </div>
           <Link
             href="/"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-secondary rounded-lg hover:bg-surface-hover hover:text-text-primary transition-colors"
           >
             <LogOut className="w-5 h-5" />
             Exit Admin
