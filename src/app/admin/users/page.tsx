@@ -1,4 +1,4 @@
-import { createClientServer } from '@/lib/supabase';
+import { createClientServer } from '@/lib/supabase-server';
 import { Users, Mail, Calendar, Shield } from 'lucide-react';
 
 async function getUsers() {

@@ -83,3 +83,4 @@ coverage/
 *.tar.gz
 *.zip
 dist-ssr/
+.next/

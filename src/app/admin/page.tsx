@@ -1,4 +1,4 @@
-import { createClientServer } from '@/lib/supabase';
+import { createClientServer } from '@/lib/supabase-server';
 import { 
   Users, 
   Share2, 

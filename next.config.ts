@@ -1,8 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export',
-  distDir: 'dist',
+  // Static export only for production builds
+  // Dev mode needs server for middleware to work
+  ...(process.env.NODE_ENV === 'production' ? {
+    output: 'export',
+    distDir: 'dist',
+  } : {}),
   images: {
     unoptimized: true,
   },
