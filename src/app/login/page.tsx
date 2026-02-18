@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { createClientBrowser } from '@/lib/supabase';
+import { createClientBrowser, signInWithOAuth } from '@/lib/supabase';
 import { Mail, Lock, Loader2, Github, Twitter } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -45,12 +45,8 @@ export default function Login() {
   }
 
   async function handleOAuth(provider: 'github' | 'twitter' | 'google') {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    setError(null);
+    const { error } = await signInWithOAuth(provider);
     if (error) setError(error.message);
   }
 

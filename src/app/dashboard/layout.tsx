@@ -93,7 +93,10 @@ export default function DashboardLayout({
           <aside className="lg:col-span-1">
             <nav className="space-y-1 card p-2">
               {navItems.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                // For Dashboard, only match exact path. For others, match exact or subpaths
+                const isActive = item.href === '/dashboard' 
+                  ? pathname === '/dashboard'
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
                   <Link
                     key={item.href}

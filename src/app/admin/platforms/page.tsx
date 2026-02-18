@@ -14,10 +14,64 @@ import {
   Key,
   Eye,
   EyeOff,
-  Loader2
+  Loader2,
+  Wand2,
+  Copy,
+  Check
 } from 'lucide-react';
 
 const supabase = createClientBrowser();
+
+// Default OAuth configurations for platforms
+const PLATFORM_DEFAULTS: Record<string, {
+  auth_url: string;
+  token_url: string;
+  scope: string;
+  redirect_uri_suffix: string;
+}> = {
+  twitter: {
+    auth_url: 'https://twitter.com/i/oauth2/authorize',
+    token_url: 'https://api.twitter.com/2/oauth2/token',
+    scope: 'tweet.read tweet.write users.read offline.access',
+    redirect_uri_suffix: '/auth/callback/twitter',
+  },
+  instagram: {
+    auth_url: 'https://www.instagram.com/oauth/authorize',
+    token_url: 'https://api.instagram.com/oauth/access_token',
+    scope: 'instagram_basic instagram_content_publish',
+    redirect_uri_suffix: '/auth/callback/instagram',
+  },
+  linkedin: {
+    auth_url: 'https://www.linkedin.com/oauth/v2/authorization',
+    token_url: 'https://www.linkedin.com/oauth/v2/accessToken',
+    scope: 'r_liteprofile r_basicprofile w_member_social',
+    redirect_uri_suffix: '/auth/callback/linkedin',
+  },
+  facebook: {
+    auth_url: 'https://www.facebook.com/v18.0/dialog/oauth',
+    token_url: 'https://graph.facebook.com/v18.0/oauth/access_token',
+    scope: 'pages_read_engagement pages_manage_posts',
+    redirect_uri_suffix: '/auth/callback/facebook',
+  },
+  youtube: {
+    auth_url: 'https://accounts.google.com/o/oauth2/v2/auth',
+    token_url: 'https://oauth2.googleapis.com/token',
+    scope: 'https://www.googleapis.com/auth/youtube.upload',
+    redirect_uri_suffix: '/auth/callback/youtube',
+  },
+  tiktok: {
+    auth_url: 'https://www.tiktok.com/v2/auth/authorize/',
+    token_url: 'https://open.tiktokapis.com/v2/oauth/token/',
+    scope: 'video.upload user.info.basic',
+    redirect_uri_suffix: '/auth/callback/tiktok',
+  },
+  pinterest: {
+    auth_url: 'https://www.pinterest.com/oauth/',
+    token_url: 'https://api.pinterest.com/v5/oauth/token',
+    scope: 'boards:read,pins:read,pins:write',
+    redirect_uri_suffix: '/auth/callback/pinterest',
+  },
+};
 
 export default function PlatformsAdmin() {
   const [platforms, setPlatforms] = useState<PlatformSetting[]>([]);
@@ -26,6 +80,7 @@ export default function PlatformsAdmin() {
   const [editing, setEditing] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPlatforms();
@@ -94,6 +149,36 @@ export default function PlatformsAdmin() {
     setTimeout(() => setMessage(null), 3000);
   }
 
+  function autoFillDefaults(platformKey: string) {
+    const defaults = PLATFORM_DEFAULTS[platformKey];
+    if (!defaults) return;
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    
+    // Find the form and fill in values
+    const form = document.getElementById(`form-${platformKey}`) as HTMLFormElement;
+    if (!form) return;
+
+    const authUrlInput = form.querySelector('[name="auth_url"]') as HTMLInputElement;
+    const tokenUrlInput = form.querySelector('[name="token_url"]') as HTMLInputElement;
+    const scopeInput = form.querySelector('[name="scope"]') as HTMLInputElement;
+    const redirectUriInput = form.querySelector('[name="redirect_uri"]') as HTMLInputElement;
+
+    if (authUrlInput && !authUrlInput.value) authUrlInput.value = defaults.auth_url;
+    if (tokenUrlInput && !tokenUrlInput.value) tokenUrlInput.value = defaults.token_url;
+    if (scopeInput && !scopeInput.value) scopeInput.value = defaults.scope;
+    if (redirectUriInput && !redirectUriInput.value) redirectUriInput.value = origin + defaults.redirect_uri_suffix;
+
+    setMessage({ type: 'success', text: 'Auto-filled OAuth defaults' });
+    setTimeout(() => setMessage(null), 2000);
+  }
+
+  function copyToClipboard(text: string, field: string) {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  }
+
   const toggleSecretVisibility = (field: string) => {
     setShowSecrets(prev => ({ ...prev, [field]: !prev[field] }));
   };
@@ -132,6 +217,7 @@ export default function PlatformsAdmin() {
         {platforms.map((platform) => {
           const config = PLATFORM_CONFIG[platform.platform as Platform];
           const isEditing = editing === platform.id;
+          const hasDefaults = PLATFORM_DEFAULTS[platform.platform];
 
           return (
             <div
@@ -186,7 +272,25 @@ export default function PlatformsAdmin() {
               {/* Configuration Form */}
               {isEditing && (
                 <div className="border-t border-divider bg-surface-sunken/50 p-6">
+                  {/* Auto-fill button */}
+                  {hasDefaults && (
+                    <div className="mb-6">
+                      <button
+                        type="button"
+                        onClick={() => autoFillDefaults(platform.platform)}
+                        className="flex items-center gap-2 px-4 py-2 bg-accent/10 text-accent rounded-lg hover:bg-accent/20 transition-colors"
+                      >
+                        <Wand2 className="w-4 h-4" />
+                        Auto-fill OAuth Defaults
+                      </button>
+                      <p className="text-xs text-text-secondary mt-2">
+                        Automatically fills Auth URL, Token URL, Scope, and Redirect URI for {config?.name}
+                      </p>
+                    </div>
+                  )}
+
                   <form
+                    id={`form-${platform.platform}`}
                     onSubmit={(e) => {
                       e.preventDefault();
                       savePlatformConfig(platform.id, new FormData(e.currentTarget));
@@ -203,7 +307,7 @@ export default function PlatformsAdmin() {
                           type="text"
                           name="client_id"
                           defaultValue={platform.client_id || ''}
-                          placeholder="Enter client ID"
+                          placeholder="Enter client ID from developer portal"
                           className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary focus:ring-2 focus:ring-accent/50 focus:border-accent"
                         />
                       </div>
@@ -237,22 +341,39 @@ export default function PlatformsAdmin() {
                       </div>
 
                       {/* Redirect URI */}
-                      <div>
+                      <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-text-secondary mb-2">
                           <ExternalLink className="w-4 h-4 inline mr-1" />
                           Redirect URI
+                          <span className="text-text-tertiary font-normal ml-1">(copy this to your app settings)</span>
                         </label>
-                        <input
-                          type="url"
-                          name="redirect_uri"
-                          defaultValue={platform.redirect_uri || `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback/${platform.platform}`}
-                          placeholder="https://yourdomain.com/auth/callback/twitter"
-                          className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary focus:ring-2 focus:ring-accent/50 focus:border-accent"
-                        />
+                        <div className="relative">
+                          <input
+                            type="url"
+                            name="redirect_uri"
+                            defaultValue={platform.redirect_uri || `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback/${platform.platform}`}
+                            className="w-full px-3 py-2 pr-10 bg-surface border border-border rounded-lg text-text-primary focus:ring-2 focus:ring-accent/50 focus:border-accent font-mono text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const input = document.querySelector(`[name="redirect_uri"]`) as HTMLInputElement;
+                              if (input) copyToClipboard(input.value, 'redirect_uri');
+                            }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-accent transition-colors"
+                            title="Copy to clipboard"
+                          >
+                            {copiedField === 'redirect_uri' ? (
+                              <Check className="w-4 h-4 text-accent" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
                       </div>
 
                       {/* Scope */}
-                      <div>
+                      <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-text-secondary mb-2">
                           Scope
                         </label>
@@ -266,7 +387,7 @@ export default function PlatformsAdmin() {
                       </div>
 
                       {/* Auth URL */}
-                      <div className="md:col-span-2">
+                      <div>
                         <label className="block text-sm font-medium text-text-secondary mb-2">
                           Authorization URL
                         </label>
@@ -280,7 +401,7 @@ export default function PlatformsAdmin() {
                       </div>
 
                       {/* Token URL */}
-                      <div className="md:col-span-2">
+                      <div>
                         <label className="block text-sm font-medium text-text-secondary mb-2">
                           Token URL
                         </label>

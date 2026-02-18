@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Settings, 
@@ -8,11 +11,6 @@ import {
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
-
-export const metadata = {
-  title: 'Admin - MyPost',
-  description: 'Admin dashboard for MyPost',
-};
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,6 +24,8 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar */}
@@ -39,17 +39,27 @@ export default function AdminLayout({
         
         <nav className="px-4 pb-4">
           <ul className="space-y-1">
-            {navItems.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-secondary rounded-lg hover:bg-surface-hover hover:text-text-primary transition-colors"
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.label}
-                </Link>
-              </li>
-            ))}
+            {navItems.map((item) => {
+              // For Dashboard, only match exact path. For others, match exact or subpaths
+              const isActive = item.href === '/admin' 
+                ? pathname === '/admin'
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                      isActive 
+                        ? 'bg-accent/10 text-accent' 
+                        : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
